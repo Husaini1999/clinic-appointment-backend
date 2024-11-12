@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: primer-clinic-backend
+    name: clinic-appointment-backend
     env: node
     buildCommand: npm install
     startCommand: node server.js
