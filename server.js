@@ -9,12 +9,21 @@ const app = express();
 // Security Middleware
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));
+
+const allowedOrigins =
+	process.env.NODE_ENV === 'production'
+		? [process.env.FRONTEND_URL.replace(/\/$/, '')] // Remove trailing slash if present
+		: ['http://localhost:3000'];
+
 app.use(
 	cors({
-		origin:
-			process.env.NODE_ENV === 'production'
-				? process.env.FRONTEND_URL
-				: 'http://localhost:3000',
+		origin: function (origin, callback) {
+			if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
+		},
 		credentials: true,
 		methods: ['GET', 'POST', 'PUT', 'DELETE'],
 		allowedHeaders: ['Content-Type', 'Authorization'],
