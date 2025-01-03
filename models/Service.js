@@ -18,7 +18,7 @@ const ServiceSchema = new mongoose.Schema({
 	duration: {
 		type: Number,
 		required: [true, 'Duration is required'],
-		min: [15, 'Duration must be at least 15 minutes'],
+		min: [5, 'Duration must be at least 5 minutes'],
 	},
 	price: {
 		type: Number,

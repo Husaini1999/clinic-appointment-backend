@@ -7,13 +7,34 @@ const upload = require('../middleware/upload');
 // Get all services
 router.get('/', async (req, res) => {
 	try {
-		const services = await Service.find({ isActive: true }).populate(
-			'category',
-			'name'
-		);
+		const { category } = req.query;
+		const query = { isActive: true };
+
+		if (category) {
+			query.category = category;
+		}
+
+		const services = await Service.find(query)
+			.populate('category', 'name')
+			.sort({ name: 1 });
+
 		res.json(services);
 	} catch (error) {
 		res.status(500).json({ message: 'Error fetching services' });
+	}
+});
+
+// Add a new route to get services by category ID
+router.get('/category/:categoryId', async (req, res) => {
+	try {
+		const services = await Service.find({
+			category: req.params.categoryId,
+			isActive: true,
+		}).populate('category', 'name');
+
+		res.json(services);
+	} catch (error) {
+		res.status(500).json({ message: 'Error fetching category services' });
 	}
 });
 
