@@ -37,6 +37,24 @@ const UserSchema = new mongoose.Schema({
 		type: Date,
 		default: Date.now,
 	},
+	weight: {
+		type: Number,
+		required: false,
+		min: [0, 'Weight cannot be negative'],
+		validate: {
+			validator: Number.isFinite,
+			message: 'Weight must be a valid number',
+		},
+	},
+	height: {
+		type: Number,
+		required: false,
+		min: [0, 'Height cannot be negative'],
+		validate: {
+			validator: Number.isFinite,
+			message: 'Height must be a valid number',
+		},
+	},
 });
 
 // Pre-save middleware to hash password

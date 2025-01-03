@@ -124,7 +124,18 @@ router.put('/update-user', authMiddleware, async (req, res) => {
 			}
 		});
 
-		await user.save();
+		try {
+			await user.save();
+		} catch (validationError) {
+			// Handle mongoose validation errors
+			if (validationError.errors) {
+				const errorMessages = Object.values(validationError.errors)
+					.map((error) => error.message)
+					.join(', ');
+				return res.status(400).json({ message: errorMessages });
+			}
+			throw validationError;
+		}
 
 		// Return user without password
 		const updatedUser = user.toObject();
@@ -136,7 +147,9 @@ router.put('/update-user', authMiddleware, async (req, res) => {
 		});
 	} catch (error) {
 		console.error('Error updating user details:', error);
-		res.status(500).json({ message: 'Server error' });
+		res.status(500).json({
+			message: error.message || 'Server error',
+		});
 	}
 });
 
