@@ -4,6 +4,7 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
 const Note = require('../models/Note');
+const { format } = require('date-fns');
 
 // Public appointment booking endpoint
 router.post('/create', async (req, res) => {
@@ -132,7 +133,7 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
 		}
 
 		// Validate status
-		const validStatuses = ['pending', 'approved', 'rejected', 'cancelled'];
+		const validStatuses = ['pending', 'completed', 'no_show', 'cancelled'];
 		if (!validStatuses.includes(status)) {
 			return res.status(400).json({ message: 'Invalid status' });
 		}
@@ -143,55 +144,79 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
 			return res.status(404).json({ message: 'Appointment not found' });
 		}
 
-		try {
-			// Create note document
-			const noteType =
-				status === 'approved'
-					? 'approval'
-					: status === 'rejected'
-					? 'rejection'
-					: 'cancellation';
+		// Create note document
+		const newNote = new Note({
+			appointmentId: appointment._id,
+			type: status,
+			content: notes || 'No notes provided',
+			addedBy: user.role,
+			addedById: user.id,
+		});
 
-			const newNote = new Note({
-				appointmentId: appointment._id,
-				type: noteType,
-				content: notes || 'No notes provided',
-				addedBy: user.role,
-				addedById: user.id,
-			});
+		const savedNote = await newNote.save();
 
-			const savedNote = await newNote.save();
+		// Update appointment
+		appointment.status = status;
+		appointment.noteHistory.push(savedNote._id);
+		await appointment.save();
 
-			// Update appointment
-			appointment.status = status;
-			appointment.notes = notes;
-			if (!appointment.noteHistory) {
-				appointment.noteHistory = [];
-			}
-			appointment.noteHistory.push(savedNote._id);
-
-			await appointment.save();
-
-			res.status(200).json({
-				message: 'Appointment status updated successfully',
-				appointment,
-				note: savedNote,
-			});
-		} catch (noteError) {
-			console.error('Error creating note:', noteError);
-			// Still update the appointment even if note creation fails
-			appointment.status = status;
-			appointment.notes = notes;
-			await appointment.save();
-
-			res.status(200).json({
-				message: 'Appointment status updated but note creation failed',
-				appointment,
-			});
-		}
+		res.status(200).json({
+			message: 'Appointment updated successfully',
+			appointment,
+			note: savedNote,
+		});
 	} catch (error) {
-		console.error('Error updating appointment status:', error);
-		res.status(500).json({ message: 'Error updating appointment status' });
+		console.error('Error updating appointment:', error);
+		res.status(500).json({ message: 'Error updating appointment' });
+	}
+});
+
+// Update appointment reschedule
+router.put('/:id/reschedule', authMiddleware, async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { newDateTime, reason } = req.body;
+		const user = req.user;
+
+		if (!user || !user.id) {
+			return res.status(401).json({ message: 'User not authenticated' });
+		}
+
+		// Find appointment
+		const appointment = await Appointment.findById(id);
+		if (!appointment) {
+			return res.status(404).json({ message: 'Appointment not found' });
+		}
+
+		const oldDateTime = appointment.appointmentTime;
+
+		// Create note for the reschedule
+		const newNote = new Note({
+			appointmentId: appointment._id,
+			type: 'reschedule_note',
+			content: `Appointment rescheduled from ${format(
+				oldDateTime,
+				'PPpp'
+			)} to ${format(new Date(newDateTime), 'PPpp')}. Reason: ${reason}`,
+			addedBy: user.role,
+			addedById: user.id,
+		});
+
+		const savedNote = await newNote.save();
+
+		// Update appointment time (status remains 'pending')
+		appointment.appointmentTime = newDateTime;
+		appointment.noteHistory.push(savedNote._id);
+		await appointment.save();
+
+		res.status(200).json({
+			message: 'Appointment rescheduled successfully',
+			appointment,
+			note: savedNote,
+		});
+	} catch (error) {
+		console.error('Error rescheduling appointment:', error);
+		res.status(500).json({ message: 'Error rescheduling appointment' });
 	}
 });
 

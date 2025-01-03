@@ -8,7 +8,14 @@ const NoteSchema = new mongoose.Schema({
 	},
 	type: {
 		type: String,
-		enum: ['booking', 'approval', 'rejection', 'cancellation'],
+		enum: [
+			'pending',
+			'completed',
+			'no_show',
+			'cancelled',
+			'reschedule_note',
+			'booking',
+		],
 		required: true,
 	},
 	content: {

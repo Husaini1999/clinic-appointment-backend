@@ -44,7 +44,7 @@ const AppointmentSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		enum: ['pending', 'approved', 'rejected', 'cancelled'],
+		enum: ['pending', 'completed', 'no_show', 'cancelled'],
 		default: 'pending',
 	},
 	notes: {
@@ -80,9 +80,16 @@ AppointmentSchema.index({ appointmentTime: 1, status: 1 });
 // Middleware to check for appointment conflicts
 AppointmentSchema.pre('save', async function (next) {
 	if (this.isModified('appointmentTime')) {
+		const appointmentStart = new Date(this.appointmentTime);
+		const appointmentEnd = new Date(this.appointmentTime);
+		appointmentEnd.setMinutes(appointmentEnd.getMinutes() + 30); // 30-minute slot
+
 		const conflictingAppointment = await this.constructor.findOne({
-			appointmentTime: this.appointmentTime,
-			status: { $in: ['pending', 'approved'] },
+			appointmentTime: {
+				$gte: appointmentStart,
+				$lt: appointmentEnd,
+			},
+			status: { $in: ['pending'] },
 			_id: { $ne: this._id },
 		});
 
