@@ -27,16 +27,9 @@ const AppointmentSchema = new mongoose.Schema({
 		min: [0, 'Height cannot be negative'],
 	},
 	treatment: {
-		type: String,
+		type: mongoose.Schema.Types.ObjectId,
+		ref: 'Service',
 		required: [true, 'Treatment type is required'],
-		enum: [
-			'General Checkup',
-			'Dental Care',
-			'Physiotherapy',
-			'Pediatric Care',
-			'Vaccination',
-			'Geriatric Care',
-		],
 	},
 	appointmentTime: {
 		type: Date,

@@ -59,6 +59,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/openai', require('./routes/openaiRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/services', require('./routes/serviceRoutes'));
+app.use('/api/categories', require('./routes/categoryRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
