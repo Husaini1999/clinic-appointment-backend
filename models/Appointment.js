@@ -16,6 +16,16 @@ const AppointmentSchema = new mongoose.Schema({
 		required: [true, 'Phone number is required'],
 		trim: true,
 	},
+	weight: {
+		type: Number,
+		required: false,
+		min: [0, 'Weight cannot be negative'],
+	},
+	height: {
+		type: Number,
+		required: false,
+		min: [0, 'Height cannot be negative'],
+	},
 	treatment: {
 		type: String,
 		required: [true, 'Treatment type is required'],
