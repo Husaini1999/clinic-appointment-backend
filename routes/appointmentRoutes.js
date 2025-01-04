@@ -57,7 +57,7 @@ router.post('/create', async (req, res) => {
 				type: 'booking',
 				content: notes,
 				addedBy: 'patient',
-				addedById: user ? user._id : null,
+				addedById: user ? user._id : newAppointment._id,
 			});
 
 			const savedNote = await initialNote.save();
