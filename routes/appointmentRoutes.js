@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/auth');
 const Note = require('../models/Note');
 const { format } = require('date-fns');
 
-// Public appointment booking endpoint
+// Public routes first
 router.post('/create', async (req, res) => {
 	try {
 		const { name, email, phone, treatment, appointmentTime, notes } = req.body;
@@ -77,7 +77,35 @@ router.post('/create', async (req, res) => {
 	}
 });
 
-// Middleware to protect the routes
+// Get booked slots for a specific date (public endpoint)
+router.get('/booked-slots', async (req, res) => {
+	try {
+		const { date } = req.query;
+		const startDate = new Date(date);
+		startDate.setHours(0, 0, 0, 0);
+
+		const endDate = new Date(date);
+		endDate.setHours(23, 59, 59, 999);
+
+		const bookedAppointments = await Appointment.find({
+			appointmentTime: {
+				$gte: startDate,
+				$lte: endDate,
+			},
+			status: 'pending',
+		});
+
+		const bookedSlots = bookedAppointments.map((appointment) =>
+			format(new Date(appointment.appointmentTime), 'h:mm a')
+		);
+		res.json({ bookedSlots });
+	} catch (error) {
+		console.error('Error fetching booked slots:', error);
+		res.status(500).json({ message: 'Error fetching booked slots' });
+	}
+});
+
+// Protected routes below this middleware
 router.use(authMiddleware);
 
 // Get all appointments for staff to view
