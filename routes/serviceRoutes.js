@@ -7,7 +7,7 @@ const upload = require('../middleware/upload');
 // Get all services
 router.get('/', async (req, res) => {
 	try {
-		const { category } = req.query;
+		const { category, limit } = req.query;
 		const query = { isActive: true };
 
 		if (category) {
@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
 
 		const services = await Service.find(query)
 			.populate('category', 'name')
-			.sort({ name: 1 });
+			.sort({ name: 1 })
+			.limit(parseInt(limit) || 0);
 
 		res.json(services);
 	} catch (error) {
