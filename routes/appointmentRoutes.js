@@ -126,10 +126,12 @@ router.get('/', async (req, res) => {
 router.get('/patient', async (req, res) => {
 	try {
 		const { email } = req.query;
-		const patientAppointments = await Appointment.find({ email }).populate({
-			path: 'noteHistory',
-			select: 'type content createdAt addedBy',
-		});
+		const patientAppointments = await Appointment.find({ email })
+			.populate('treatment', 'name')
+			.populate({
+				path: 'noteHistory',
+				select: 'type content createdAt addedBy',
+			});
 		res.status(200).json(patientAppointments);
 	} catch (error) {
 		console.error('Error fetching patient appointments:', error);
