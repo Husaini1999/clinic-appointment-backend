@@ -6,7 +6,6 @@ const authMiddleware = require('../middleware/auth');
 const Note = require('../models/Note');
 const { format } = require('date-fns');
 
-// Public routes first
 router.post('/create', async (req, res) => {
 	try {
 		const { name, email, phone, address, treatment, appointmentTime, notes } =
@@ -145,10 +144,17 @@ router.use(authMiddleware);
 // Get all appointments for staff to view
 router.get('/', async (req, res) => {
 	try {
-		const allAppointments = await Appointment.find().populate({
-			path: 'noteHistory',
-			select: 'type content createdAt addedBy',
-		});
+		const allAppointments = await Appointment.find()
+			.populate({
+				path: 'treatment',
+				select: 'name price duration',
+				model: 'Service',
+			})
+			.populate({
+				path: 'noteHistory',
+				select: 'type content createdAt addedBy',
+			});
+
 		res.status(200).json(allAppointments);
 	} catch (error) {
 		console.error('Error fetching all appointments:', error);
@@ -161,7 +167,7 @@ router.get('/patient', async (req, res) => {
 	try {
 		const { email } = req.query;
 		const patientAppointments = await Appointment.find({ email })
-			.populate('treatment', 'name')
+			.populate('treatment', 'name price duration')
 			.populate({
 				path: 'noteHistory',
 				select: 'type content createdAt addedBy',
