@@ -37,8 +37,8 @@ const AppointmentSchema = new mongoose.Schema({
 	},
 	status: {
 		type: String,
-		enum: ['pending', 'completed', 'no_show', 'cancelled'],
-		default: 'pending',
+		enum: ['confirmed', 'completed', 'no_show', 'cancelled'],
+		default: 'confirmed',
 	},
 	notes: {
 		type: String,
@@ -82,7 +82,7 @@ AppointmentSchema.pre('save', async function (next) {
 				$gte: appointmentStart,
 				$lt: appointmentEnd,
 			},
-			status: { $in: ['pending'] },
+			status: { $in: ['confirmed'] },
 			_id: { $ne: this._id },
 		});
 

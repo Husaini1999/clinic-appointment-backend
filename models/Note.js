@@ -9,7 +9,7 @@ const NoteSchema = new mongoose.Schema({
 	type: {
 		type: String,
 		enum: [
-			'pending',
+			'confirmed',
 			'completed',
 			'no_show',
 			'cancelled',

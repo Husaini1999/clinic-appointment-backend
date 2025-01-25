@@ -29,7 +29,7 @@ router.post('/create', async (req, res) => {
 		// Check for appointment conflicts
 		const existingAppointment = await Appointment.findOne({
 			appointmentTime: new Date(appointmentTime),
-			status: { $in: ['pending', 'approved'] },
+			status: { $in: ['confirmed', 'approved'] },
 		});
 
 		if (existingAppointment) {
@@ -74,7 +74,7 @@ router.post('/create', async (req, res) => {
 			phone,
 			treatment,
 			appointmentTime: new Date(appointmentTime),
-			status: 'pending',
+			status: 'confirmed',
 			notes: notes || '',
 		});
 
@@ -126,7 +126,7 @@ router.get('/booked-slots', async (req, res) => {
 				$gte: startDate,
 				$lte: endDate,
 			},
-			status: 'pending',
+			status: 'confirmed',
 		});
 
 		const bookedSlots = bookedAppointments.map((appointment) =>
@@ -175,7 +175,7 @@ router.get('/patient', async (req, res) => {
 
 // Optional: Add filtering functionality for appointments
 router.get('/filter', async (req, res) => {
-	const { status } = req.query; // e.g., ?status=pending
+	const { status } = req.query;
 	try {
 		const filteredAppointments = await Appointment.find({ status });
 		res.status(200).json(filteredAppointments);
@@ -197,7 +197,7 @@ router.put('/:id/status', authMiddleware, async (req, res) => {
 		}
 
 		// Validate status
-		const validStatuses = ['pending', 'completed', 'no_show', 'cancelled'];
+		const validStatuses = ['confirmed', 'completed', 'no_show', 'cancelled'];
 		if (!validStatuses.includes(status)) {
 			return res.status(400).json({ message: 'Invalid status' });
 		}
@@ -268,7 +268,7 @@ router.put('/:id/reschedule', authMiddleware, async (req, res) => {
 
 		const savedNote = await newNote.save();
 
-		// Update appointment time (status remains 'pending')
+		// Update appointment time (status remains 'confirmed')
 		appointment.appointmentTime = newDateTime;
 		appointment.noteHistory.push(savedNote._id);
 		await appointment.save();
