@@ -13,7 +13,14 @@ router.post('/create', async (req, res) => {
 			req.body;
 
 		// Basic validation
-		if (!name || !email || !phone || !treatment || !appointmentTime) {
+		if (
+			!name ||
+			!email ||
+			!phone ||
+			!address ||
+			!treatment ||
+			!appointmentTime
+		) {
 			return res
 				.status(400)
 				.json({ message: 'Please fill in all required fields' });
