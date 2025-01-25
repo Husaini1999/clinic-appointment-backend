@@ -9,7 +9,8 @@ const { format } = require('date-fns');
 // Public routes first
 router.post('/create', async (req, res) => {
 	try {
-		const { name, email, phone, treatment, appointmentTime, notes } = req.body;
+		const { name, email, phone, address, treatment, appointmentTime, notes } =
+			req.body;
 
 		// Basic validation
 		if (!name || !email || !phone || !treatment || !appointmentTime) {
@@ -30,14 +31,36 @@ router.post('/create', async (req, res) => {
 				.json({ message: 'This time slot is already booked' });
 		}
 
-		// Update user's phone number if they are logged in
-		const user = await User.findOne({ email });
-		if (user && (!user.phone || user.phone !== phone)) {
+		// Check for existing user and handle accordingly
+		let user = await User.findOne({ email });
+
+		if (!user) {
+			// Create temporary user with address
+			const temporaryPassword = Math.random().toString(36).slice(-8);
+			user = new User({
+				name,
+				email,
+				phone,
+				address,
+				password: temporaryPassword,
+				isTemporaryUser: true,
+				role: 'patient',
+			});
+			await user.save();
+		} else if (user.isTemporaryUser) {
+			// Update temporary user's details
+			user.name = name;
 			user.phone = phone;
+			user.address = address;
+			await user.save();
+		} else {
+			// Update user's details including address
+			user.phone = phone;
+			user.address = address;
 			await user.save();
 		}
 
-		// Create new appointment
+		// Create new appointment without address
 		const newAppointment = new Appointment({
 			patientName: name,
 			email,
@@ -45,9 +68,9 @@ router.post('/create', async (req, res) => {
 			treatment,
 			appointmentTime: new Date(appointmentTime),
 			status: 'pending',
+			notes: notes || '',
 		});
 
-		// Save the appointment first to get its ID
 		await newAppointment.save();
 
 		// Create initial note if notes are provided
@@ -57,7 +80,7 @@ router.post('/create', async (req, res) => {
 				type: 'booking',
 				content: notes,
 				addedBy: 'patient',
-				addedById: user ? user._id : newAppointment._id,
+				addedById: user._id,
 			});
 
 			const savedNote = await initialNote.save();
@@ -68,12 +91,16 @@ router.post('/create', async (req, res) => {
 		}
 
 		res.status(201).json({
-			message: 'Appointment booked successfully',
+			message: user.isTemporaryUser
+				? 'Appointment booked successfully! You can complete your registration using this email address.'
+				: 'Appointment booked successfully!',
 			appointment: newAppointment,
 		});
 	} catch (error) {
-		console.error('Appointment booking error:', error);
-		res.status(500).json({ message: 'Error booking appointment' });
+		console.error('Error creating appointment:', error);
+		res
+			.status(500)
+			.json({ message: error.message || 'Error creating appointment' });
 	}
 });
 

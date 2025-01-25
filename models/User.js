@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema({
 		type: String,
 		trim: true,
 	},
+	address: {
+		type: String,
+		trim: true,
+	},
 	role: {
 		type: String,
 		enum: ['admin', 'staff', 'patient'],
@@ -54,6 +58,10 @@ const UserSchema = new mongoose.Schema({
 			validator: Number.isFinite,
 			message: 'Height must be a valid number',
 		},
+	},
+	isTemporaryUser: {
+		type: Boolean,
+		default: false,
 	},
 });
 

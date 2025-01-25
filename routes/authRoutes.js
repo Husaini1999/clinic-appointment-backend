@@ -7,13 +7,35 @@ const authMiddleware = require('../middleware/auth');
 
 // Signup route
 router.post('/signup', async (req, res) => {
-	const { name, email, password } = req.body;
-
 	try {
-		// Check if user already exists
+		const { name, email, password, confirmPassword } = req.body;
+
+		// Basic validation
+		if (!name || !email || !password) {
+			return res
+				.status(400)
+				.json({ message: 'Please fill in all required fields' });
+		}
+
+		// Check if user exists
 		const existingUser = await User.findOne({ email });
+
 		if (existingUser) {
-			return res.status(400).json({ message: 'User already exists' });
+			if (existingUser.isTemporaryUser) {
+				// Update the temporary user with the new password and make them permanent
+				existingUser.password = password;
+				existingUser.isTemporaryUser = false;
+				await existingUser.save();
+
+				return res.status(200).json({
+					message: 'Registration completed successfully! You can now log in.',
+				});
+			} else {
+				// If user exists and is not temporary, return error
+				return res.status(400).json({
+					message: 'An account with this email already exists.',
+				});
+			}
 		}
 
 		// Validate password length
@@ -175,6 +197,18 @@ router.put('/change-password', authMiddleware, async (req, res) => {
 		res.json({ message: 'Password updated successfully' });
 	} catch (error) {
 		console.error('Error changing password:', error);
+		res.status(500).json({ message: 'Server error' });
+	}
+});
+
+// Add this new route
+router.get('/check-email/:email', async (req, res) => {
+	try {
+		const { email } = req.params;
+		const user = await User.findOne({ email });
+		res.json({ exists: !!user });
+	} catch (error) {
+		console.error('Error checking email:', error);
 		res.status(500).json({ message: 'Server error' });
 	}
 });
