@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
+const { scheduleAppointmentCompletion } = require('./jobs/appointmentJobs');
 
 const app = express();
 
@@ -53,6 +54,9 @@ const connectDB = async () => {
 
 // Connect to MongoDB
 connectDB();
+
+// Initialize the auto-completion job
+scheduleAppointmentCompletion();
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
