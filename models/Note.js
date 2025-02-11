@@ -25,13 +25,13 @@ const NoteSchema = new mongoose.Schema({
 	},
 	addedBy: {
 		type: String,
-		enum: ['patient', 'staff', 'admin'],
+		enum: ['patient', 'admin', 'staff', 'system'],
 		required: true,
 	},
 	addedById: {
 		type: mongoose.Schema.Types.ObjectId,
 		ref: 'User',
-		required: true,
+		required: false,
 	},
 	createdAt: {
 		type: Date,

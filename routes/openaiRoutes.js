@@ -1,3 +1,4 @@
+/*
 const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
@@ -58,3 +59,4 @@ router.post('/chat', async (req, res) => {
 });
 
 module.exports = router;
+*/
