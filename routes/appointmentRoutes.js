@@ -272,9 +272,12 @@ router.put('/:id/reschedule', authMiddleware, async (req, res) => {
 			appointmentId: appointment._id,
 			type: 'reschedule_note',
 			content: `Appointment rescheduled from ${format(
-				oldDateTime,
+				new Date(oldDateTime.getTime() + 8 * 60 * 60 * 1000),
 				'PPpp'
-			)} to ${format(new Date(newDateTime), 'PPpp')}. Reason: ${reason}`,
+			)} to ${format(
+				new Date(new Date(newDateTime).getTime() + 8 * 60 * 60 * 1000),
+				'PPpp'
+			)}. Reason: ${reason}`,
 			addedBy: user.role,
 			addedById: user.id,
 		});
