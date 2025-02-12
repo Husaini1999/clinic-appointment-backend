@@ -114,11 +114,12 @@ router.post('/create', async (req, res) => {
 router.get('/booked-slots', async (req, res) => {
 	try {
 		const { date } = req.query;
+		// Create UTC date range for the requested date in UTC+8
 		const startDate = new Date(date);
-		startDate.setHours(0, 0, 0, 0);
+		startDate.setUTCHours(-8, 0, 0, 0); // Start of day in UTC+8
 
 		const endDate = new Date(date);
-		endDate.setHours(23, 59, 59, 999);
+		endDate.setUTCHours(15, 59, 59, 999); // End of day in UTC+8
 
 		const bookedAppointments = await Appointment.find({
 			appointmentTime: {
@@ -128,9 +129,15 @@ router.get('/booked-slots', async (req, res) => {
 			status: 'confirmed',
 		});
 
-		const bookedSlots = bookedAppointments.map((appointment) =>
-			format(new Date(appointment.appointmentTime), 'h:mm a')
-		);
+		const bookedSlots = bookedAppointments.map((appointment) => {
+			const appointmentTime = new Date(appointment.appointmentTime);
+			// Convert UTC to UTC+8 for display
+			const localTime = new Date(
+				appointmentTime.getTime() + 8 * 60 * 60 * 1000
+			);
+			return format(localTime, 'h:mm a');
+		});
+
 		res.json({ bookedSlots });
 	} catch (error) {
 		console.error('Error fetching booked slots:', error);

@@ -75,7 +75,7 @@ AppointmentSchema.pre('save', async function (next) {
 	if (this.isModified('appointmentTime')) {
 		const appointmentStart = new Date(this.appointmentTime);
 		const appointmentEnd = new Date(this.appointmentTime);
-		appointmentEnd.setMinutes(appointmentEnd.getMinutes() + 30); // 30-minute slot
+		appointmentEnd.setMinutes(appointmentEnd.getMinutes() + 30);
 
 		const conflictingAppointment = await this.constructor.findOne({
 			appointmentTime: {
