@@ -9,7 +9,10 @@ const scheduleAppointmentCompletion = () => {
 		'*/5 * * * *',
 		async () => {
 			try {
+				// Get current time in UTC
 				const now = new Date();
+				// Adjust for UTC+8
+				const utcNow = new Date(now.getTime() - 8 * 60 * 60 * 1000);
 
 				// Find appointments that:
 				// 1. Are confirmed
@@ -18,7 +21,7 @@ const scheduleAppointmentCompletion = () => {
 				const pastAppointments = await Appointment.find({
 					status: 'confirmed',
 					appointmentTime: {
-						$lt: new Date(now.getTime() - 60 * 60 * 1000), // 1 hour ago
+						$lt: new Date(utcNow.getTime() - 60 * 60 * 1000), // 1 hour ago in UTC
 					},
 				});
 
@@ -32,7 +35,7 @@ const scheduleAppointmentCompletion = () => {
 						1
 					);
 
-					if (isBefore(appointmentEndTime, now)) {
+					if (isBefore(appointmentEndTime, utcNow)) {
 						// Create system note
 						const newNote = new Note({
 							appointmentId: appointment._id,
