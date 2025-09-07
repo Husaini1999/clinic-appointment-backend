@@ -58,6 +58,15 @@ connectDB();
 // Initialize the auto-completion job
 scheduleAppointmentCompletion();
 
+// Health check endpoint for keeping Render backend awake
+app.get('/healthz', (req, res) => {
+	res.status(200).json({
+		status: 'ok',
+		timestamp: new Date().toISOString(),
+		uptime: process.uptime(),
+	});
+});
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
