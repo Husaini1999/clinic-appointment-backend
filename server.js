@@ -60,10 +60,18 @@ scheduleAppointmentCompletion();
 
 // Health check endpoint for keeping Render backend awake
 app.get('/healthz', (req, res) => {
+	const timestamp = new Date().toISOString();
+	const uptime = process.uptime();
+
+	// Simple health check log
+	console.log(
+		`✅ Health check pinged at ${timestamp} - Uptime: ${uptime} seconds`
+	);
+
 	res.status(200).json({
 		status: 'ok',
-		timestamp: new Date().toISOString(),
-		uptime: process.uptime(),
+		timestamp,
+		uptime,
 	});
 });
 
